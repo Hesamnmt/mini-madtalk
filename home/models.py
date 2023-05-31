@@ -59,14 +59,23 @@ class Manager(models.Model):
     def __str__(self):
         return self.user.username
     
-class Question(models.Model):
-    question_text = models.TextField()
 
-class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+class Question(models.Model):
+    question = models.TextField()
     choice_1 = models.TextField()
     choice_2 = models.TextField()
     choice_3 = models.TextField()
     choice_4 = models.TextField()
     correct_choice = models.IntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
 
+
+class Exam(models.Model):
+    name = models.CharField(max_length=255)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    question_bank = models.ForeignKey(Question, on_delete=models.CASCADE)
+    duration = models.IntegerField()
+    total_marks = models.IntegerField()
+
+    def __str__(self):
+        return self.name

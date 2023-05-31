@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Section,School,Subject,Article,Homework,Choice,Question
+from .models import Section,School,Subject,Article,Homework,Question,Exam
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -27,14 +27,14 @@ class HomeworkSerializer(serializers.ModelSerializer):
         model = Homework
         fields = '__all__'
         
-class ChoiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Choice
-        fields = ['id', 'choice_text', 'is_correct']
+
 
 class QuestionSerializer(serializers.ModelSerializer):
-    choices = ChoiceSerializer(many=True, read_only=True)
-
     class Meta:
         model = Question
-        fields = ['id', 'question_text', 'choices']
+        fields = '__all__'
+        
+class ExamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exam
+        fields = '__all__'
