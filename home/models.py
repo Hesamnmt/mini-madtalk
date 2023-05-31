@@ -58,3 +58,15 @@ class Manager(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+class Question(models.Model):
+    question_text = models.TextField()
+
+class Choice(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    choice_1 = models.TextField()
+    choice_2 = models.TextField()
+    choice_3 = models.TextField()
+    choice_4 = models.TextField()
+    correct_choice = models.IntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
+

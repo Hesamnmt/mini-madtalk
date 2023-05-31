@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.response import Response
-from .models import Section,School,Subject,Article,Homework
+from .models import Section,School,Subject,Article,Homework,Question,Choice
 from . import serializers 
 from django.shortcuts import get_object_or_404
 from account.models import User
@@ -66,3 +66,24 @@ class DetailHomework (generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "pk"
     serializer_class = serializers.HomeworkSerializer
 
+class ListQuestion (generics.ListCreateAPIView):
+    queryset = Question.objects.all()
+    serializer_class = serializers.QuestionSerializer
+
+class DetailQuestion (generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsManagerOrTeacher]
+    queryset = Question.objects.all()
+    lookup_field = "pk"
+    serializer_class = serializers.QuestionSerializer
+    
+class ListChoice (generics.ListCreateAPIView):
+    queryset = Choice.objects.all()
+    serializer_class = serializers.ChoiceSerializer
+
+class DetailChoice (generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsManagerOrTeacher]
+    queryset = Choice.objects.all()
+    lookup_field = "pk"
+    serializer_class = serializers.ChoiceSerializer
+    
+    
