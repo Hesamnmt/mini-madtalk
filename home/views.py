@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework import generics
 from rest_framework.response import Response
 from .models import Section,School,Subject,Article,Homework,Question,Exam,Teacher
@@ -52,15 +53,17 @@ class DetailArticle (generics.RetrieveUpdateDestroyAPIView):
 class ListHomework (generics.ListCreateAPIView):
     queryset = Homework.objects.all()
     serializer_class = serializers.HomeworkSerializer
-        
+    
     def post(self, request, *args, **kwargs):
-        file_serializer = self.serializer_class(data=request.data)
-        if file_serializer.is_valid():
-            file_serializer.save(user=request.user)
-            return Response(file_serializer.data, status=201)
-        else:
-            return Response(file_serializer.errors, status=400)
-
+            user = request.user
+            if user.type == "Student":
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise Response("cant",status=status.HTTP_404_NOT_FOUND)
+        
 class DetailHomework (generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsManagerOrTeacher]
     queryset = Homework.objects.all()
@@ -81,48 +84,62 @@ class DetailQuestion (generics.RetrieveUpdateDestroyAPIView):
 class ExamListCreateView(generics.ListCreateAPIView):
     serializer_class = serializers.ExamSerializer
 
-# 'ExamListCreateView' should either include a `queryset` attribute, or override the `get_queryset()` method.
-def get_queryset(self):
-    return Exam.objects.all()
+# # 'ExamListCreateView' should either include a `queryset` attribute, or override the `get_queryset()` method.
+#     def get_queryset(self):
+#         return Exam.objects.all()
 
-def create(self, request, *args, **kwargs):
-    exam_name = request.data.get('exam_name', None)
-    subject_id = request.data.get('subject_id', None)
-    teacher_id = request.data.get('teacher_id', None)
-    question_bank_id = request.data.get('question_bank_id', None)
-    duration = request.data.get('duration', None)
-    total_marks = request.data.get('total_marks', None)
-    students = request.data.get('students', [])
-
-    if not all([exam_name, subject_id, teacher_id, question_bank_id, duration, total_marks]):
-        return Response({'message': 'Please provide all required fields'}, status=status.HTTP_400_BAD_REQUEST)
-
-    try:
-        subject = Subject.objects.get(id=subject_id)
-        teacher = Teacher.objects.get(id=teacher_id)
-        question_bank = Question.objects.get(id=question_bank_id)
-    except Exception as e:
-        return Response({'message': 'Invalid subject, teacher or question bank provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-    exam = Exam(
-        name=exam_name,
-        subject=subject,
-        teacher=teacher,
-        question_bank=question_bank,
-        duration=duration,
-        total_marks=total_marks
-    )
-    exam.save()
-
-    for student_id in students:
+    def perform_create(self, serializer):
+        section_id = self.request.data.get('section_id')
         try:
-            student = User.objects.get(id=student_id)
-        except Exception as e:
-            continue
+            section = Section.objects.get(id=section_id)
+        except Section.DoesNotExist:
+            raise ValidationError('Section does not exist')
 
-        exam.students.add(student)
+#     def create(self, request, *args, **kwargs):
+#         exam_name = request.data.get('exam_name', None)
+#         subject_id = request.data.get('subject_id', None)
+#         teacher_id = request.data.get('teacher_id', None)
+#         question_bank_id = request.data.get('question_bank_id', None)
+#         duration = request.data.get('duration', None)
+#         total_marks = request.data.get('total_marks', None)
+#         section_id = self.kwargs['section_id']
+    
+#         if not all([exam_name, subject_id, teacher_id, question_bank_id, duration, total_marks]):
+#             return Response({'message': 'Please provide all required fields'}, status=status.HTTP_400_BAD_REQUEST)
 
-    exam.save()
+#         try:
+#             subject = Subject.objects.get(id=subject_id)
+#             teacher = Teacher.objects.get(id=teacher_id)
+#             question_bank = Question.objects.get(id=question_bank_id)
+#         except Exception as e:
+#             return Response({'message': 'Invalid subject, teacher or question bank provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = self.get_serializer(exam)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         exam = Exam(
+#             name=exam_name,
+#             subject=subject,
+#             teacher=teacher,
+#             question_bank=question_bank,
+#             duration=duration,
+#             total_marks=total_marks
+#         )
+#         exam.save()
+        
+#         #for
+        
+#         students = Section.objects.get(student=section__student.id)
+#         for student_id in students:
+#             try:
+#                 student = User.objects.get(id=student_id)
+#             except Exception as e:
+#                 continue
+
+#             exam.students.add(student)
+
+#         exam.save()
+
+#         serializer = self.get_serializer(exam)
+#         # return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return self.queryset.filter(section__id=section_id)
+
+    
+#             # students = request.data.get('students', [])

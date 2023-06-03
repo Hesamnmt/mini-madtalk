@@ -23,6 +23,7 @@ class Teacher(models.Model):
 class Section(models.Model):
     name = models.CharField(max_length=50)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    user = models.ManyToManyField(User)
 
 class Article(models.Model):
     title = models.CharField(max_length=100)
@@ -30,16 +31,17 @@ class Article(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     author = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     published_date = models.DateTimeField(auto_now=True)
-    file = models.FileField(upload_to='article_files/')
+    file = models.FileField(upload_to='article_files/',null=True,blank=True)
 
 class Homework(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
-    file = models.FileField(upload_to='homework_files/')
+    file = models.FileField(upload_to='homework_files/',null=True,blank=True)
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     due_date = models.DateTimeField()
     deliver_time = models.DateTimeField(auto_now_add=True)
+    student = models.ForeignKey(User,on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -71,11 +73,16 @@ class Question(models.Model):
 
 class Exam(models.Model):
     name = models.CharField(max_length=255)
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     question_bank = models.ForeignKey(Question, on_delete=models.CASCADE)
     duration = models.IntegerField()
     total_marks = models.IntegerField()
+    student = models.ManyToManyField(Student)
 
     def __str__(self):
         return self.name
+    
+class StudentSection (models.Model):
+    student = models.ForeignKey(User,on_delete=models.CASCADE)
+    section = models.ForeignKey(Section,on_delete=models.CASCADE)
