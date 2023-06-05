@@ -1,12 +1,15 @@
 from django.forms import ValidationError
+from django.urls import reverse
 from rest_framework import generics
 from rest_framework.response import Response
-from .models import Section,School,Subject,Article,Homework,Question,Exam,Teacher
-from . import serializers 
+from .models import Section,School,Subject,Article,Homework,Question,Exam,StudentSection,Teacher,Student
+from . import serializers
 from django.shortcuts import get_object_or_404
 from account.models import User
 from .permissions import IsManagerOrTeacher, IsManager
 from rest_framework import status
+from random import choice
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class ListSection (generics.ListCreateAPIView):
     queryset = Section.objects.all()
@@ -54,15 +57,18 @@ class ListHomework (generics.ListCreateAPIView):
     queryset = Homework.objects.all()
     serializer_class = serializers.HomeworkSerializer
     
-    def post(self, request, *args, **kwargs):
-            user = request.user
-            if user.type == "Student":
-                serializer = self.get_serializer(data=request.data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                raise Response("cant",status=status.HTTP_404_NOT_FOUND)
+    def perform_create(self, serializer):
+        title = self.request.data.get('title')
+        description = self.request.data.get('description')
+        due_date = self.request.data.get('due_date')
+        section = Section.objects.get(id=self.request.data.get('section'))
+        teacher = Teacher.objects.get(user_id=self.request.data.get('teacher'))
+        student = User.objects.get(id=self.request.data.get('student'))
+        Homework.objects.create(title=title,due_date=due_date, description=description,section=section,teacher=teacher,student=student)
+        serializer.save()
+
+
+
         
 class DetailHomework (generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsManagerOrTeacher]
@@ -81,65 +87,26 @@ class DetailQuestion (generics.RetrieveUpdateDestroyAPIView):
     lookup_field = "pk"
     serializer_class = serializers.QuestionSerializer
     
+class StudentSectionView(generics.ListCreateAPIView):
+    serializer_class = serializers.StudentSectionSerializer
+    queryset = StudentSection.objects.all()
+    
+    
 class ExamListCreateView(generics.ListCreateAPIView):
     serializer_class = serializers.ExamSerializer
+    queryset = Exam.objects.all()
 
-# # 'ExamListCreateView' should either include a `queryset` attribute, or override the `get_queryset()` method.
-#     def get_queryset(self):
-#         return Exam.objects.all()
-
-    def perform_create(self, serializer):
-        section_id = self.request.data.get('section_id')
-        try:
-            section = Section.objects.get(id=section_id)
-        except Section.DoesNotExist:
-            raise ValidationError('Section does not exist')
-
-#     def create(self, request, *args, **kwargs):
-#         exam_name = request.data.get('exam_name', None)
-#         subject_id = request.data.get('subject_id', None)
-#         teacher_id = request.data.get('teacher_id', None)
-#         question_bank_id = request.data.get('question_bank_id', None)
-#         duration = request.data.get('duration', None)
-#         total_marks = request.data.get('total_marks', None)
-#         section_id = self.kwargs['section_id']
-    
-#         if not all([exam_name, subject_id, teacher_id, question_bank_id, duration, total_marks]):
-#             return Response({'message': 'Please provide all required fields'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         try:
-#             subject = Subject.objects.get(id=subject_id)
-#             teacher = Teacher.objects.get(id=teacher_id)
-#             question_bank = Question.objects.get(id=question_bank_id)
-#         except Exception as e:
-#             return Response({'message': 'Invalid subject, teacher or question bank provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-#         exam = Exam(
-#             name=exam_name,
-#             subject=subject,
-#             teacher=teacher,
-#             question_bank=question_bank,
-#             duration=duration,
-#             total_marks=total_marks
-#         )
-#         exam.save()
+    def perform_create(self,serializer):
         
-#         #for
-        
-#         students = Section.objects.get(student=section__student.id)
-#         for student_id in students:
-#             try:
-#                 student = User.objects.get(id=student_id)
-#             except Exception as e:
-#                 continue
+        # student_section = StudentSection.objects.filter(student_section=self.request.data.get('section'))
+        # Exam.objects.create(section=student_section.section, teacher=teacher,question_bank=question_bank, duration=duration)
 
-#             exam.students.add(student)
+        duration = self.request.data.get('duration')
+        teacher = Teacher.objects.get(user_id=self.request.data.get('teacher'))
+        question_bank = Question.objects.get(id=self.request.data.get('question_bank'))
+        section = StudentSection.objects.get(id=self.request.data.get('section'))
+        total_marks = self.request.data.get('duration')
 
-#         exam.save()
+        Exam.objects.create(section=section, teacher=teacher,question_bank=question_bank, duration=duration, total_marks=total_marks)
 
-#         serializer = self.get_serializer(exam)
-#         # return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return self.queryset.filter(section__id=section_id)
-
-    
-#             # students = request.data.get('students', [])
+        serializer.save()

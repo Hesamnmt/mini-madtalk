@@ -17,6 +17,7 @@ urlpatterns = [
     path('question/list/', views.ListQuestion.as_view()),
     path('question/detail/<int:pk>/', views.DetailQuestion.as_view()),
     path('exam/list/', views.ExamListCreateView.as_view()),
+    path('studentsection/list/', views.StudentSectionView.as_view()),
 
     
     

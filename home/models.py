@@ -71,18 +71,24 @@ class Question(models.Model):
     correct_choice = models.IntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
 
 
+
+class StudentSection (models.Model):
+    student = models.ForeignKey(User,on_delete=models.CASCADE)
+    section = models.ForeignKey(Section,on_delete=models.CASCADE)
+
+
 class Exam(models.Model):
     name = models.CharField(max_length=255)
-    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    section = models.ForeignKey(StudentSection, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     question_bank = models.ForeignKey(Question, on_delete=models.CASCADE)
     duration = models.IntegerField()
     total_marks = models.IntegerField()
-    student = models.ManyToManyField(Student)
 
     def __str__(self):
         return self.name
     
-class StudentSection (models.Model):
-    student = models.ForeignKey(User,on_delete=models.CASCADE)
-    section = models.ForeignKey(Section,on_delete=models.CASCADE)
+class ExamStudent(models.Model):
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    score = models.SmallIntegerField()
