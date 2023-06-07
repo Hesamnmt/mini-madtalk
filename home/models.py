@@ -69,6 +69,8 @@ class Question(models.Model):
     choice_3 = models.TextField()
     choice_4 = models.TextField()
     correct_choice = models.IntegerField(choices=[(1, 'Choice 1'), (2, 'Choice 2'), (3, 'Choice 3'), (4, 'Choice 4')])
+    subject = models.ForeignKey(Subject,on_delete=models.CASCADE)
+    secttion = models.ForeignKey(Section,on_delete=models.CASCADE)
 
 
 
@@ -81,7 +83,7 @@ class Exam(models.Model):
     name = models.CharField(max_length=255)
     section = models.ForeignKey(StudentSection, on_delete=models.CASCADE)
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
-    question_bank = models.ForeignKey(Question, on_delete=models.CASCADE)
+    questions = models.ManyToManyField(Question)
     duration = models.IntegerField()
     total_marks = models.IntegerField()
 
