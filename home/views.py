@@ -102,23 +102,21 @@ class StudentSectionView(generics.ListCreateAPIView):
     
     
 class ExamListCreateView(generics.ListCreateAPIView):
+    permission_classes=[IsAuthenticated,IsManagerOrTeacher]
     serializer_class = serializers.ExamSerializer
-    queryset = Exam.objects.all()
+    # queryset = Exam.objects.all()
+    
+    def get_queryset(self):
+        teacher_id = self.request.user.id
+        queryset = Exam.objects.filter(teacher__user_id=teacher_id)
+        return queryset
 
-    # def perform_create(self,serializer):
-        # duration = self.request.data.get('duration')
-        # teacher = Teacher.objects.get(user_id=self.request.data.get('teacher'))
-        # question_bank = Question.objects.get(id=self.request.data.get('question_bank'))
-        # section = StudentSection.objects.get(id=self.request.data.get('section'))
-        # total_marks = self.request.data.get('total_marks')
-    #     Exam.objects.create(section=section, teacher=teacher,question_bank=question_bank, duration=duration, total_marks=total_marks)
-    #     serializer.save()
 
     def create(self, request, *args, **kwargs):
         exam_name = request.data.get('name')
         duration = self.request.data.get('duration')
         total_marks = self.request.data.get('total_marks')
-        teacher = Teacher.objects.get(user_id=self.request.data.get('teacher'))
+        teacher = Teacher.objects.get(user_id=self.request.user.id)
         section = StudentSection.objects.get(id=self.request.data.get('section'))
         selected_questions = request.data.get('questions')
 
@@ -126,6 +124,7 @@ class ExamListCreateView(generics.ListCreateAPIView):
 
         for question_id in selected_questions:
             question = Question.objects.get(id=question_id)
+            # if question.secttion == section:
             exam.questions.add(question)
 
         serializer = self.get_serializer(exam)

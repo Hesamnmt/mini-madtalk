@@ -35,7 +35,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class ExamSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(source = 'question_bank' ,  read_only=True)
+    questions = QuestionSerializer(many=True ,  read_only=True)
 
     class Meta:
         model = Exam
